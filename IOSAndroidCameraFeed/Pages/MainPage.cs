@@ -8,6 +8,7 @@ namespace IOSAndroidCameraFeed.Pages;
 public class MainPage : ContentPage
 {
 	private CameraFeedView cameraFeed;
+	private bool isRecording = false;
 
 	private Button recordButton = new Button
 	{
@@ -31,6 +32,7 @@ public class MainPage : ContentPage
 
 		switchCameraPosition.TapGesture(SwitchCameraPosition, 1);
 		takePhoto.TapGesture(GetImage, 1);
+		recordButton.TapGesture(Record, 1);
 
 		Content = new Grid 
 		{
@@ -83,12 +85,29 @@ public class MainPage : ContentPage
 		{
 			while(true)
 			{
-				await Task.Delay(10000);
+				await Task.Delay(10000); // every ten seconds so output won't explode
                 cameraFeed.GetLatestVideoFrame((byteArray) =>
                 {
                     Debug.WriteLine($"Current VIDEO FRAME as BASE64 >>> {Convert.ToBase64String(byteArray)}");
                 });
             }
 		});
+	}
+
+	private void Record()
+	{
+		if (!isRecording)
+		{
+			cameraFeed.StartRecording();
+			this.isRecording = true;
+		}
+		else
+		{
+			cameraFeed.EndRecording((byteArray) =>
+			{
+				this.isRecording = false;
+				Debug.WriteLine($"Recorded video of byte size {byteArray.Length}");
+			});
+		}
 	}
 }

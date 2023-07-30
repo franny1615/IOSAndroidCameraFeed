@@ -12,7 +12,8 @@ namespace IOSAndroidCameraFeed.Platforms.iOS.Controls;
 public class CameraFeedPlatformView :
     UIView,
     IAVCapturePhotoCaptureDelegate,
-    IAVCaptureVideoDataOutputSampleBufferDelegate
+    IAVCaptureVideoDataOutputSampleBufferDelegate,
+    IAVCaptureFileOutputRecordingDelegate
 {
     AVCaptureSession captureSession;
     AVCaptureVideoPreviewLayer videoPreviewLayer;
@@ -20,10 +21,12 @@ public class CameraFeedPlatformView :
     AVCaptureDeviceInput videoInput;
     AVCaptureVideoDataOutput videoOutput;
     AVCapturePhotoOutput imageOutput;
+    AVCaptureMovieFileOutput videoRecordOutput;
 
     byte[] latestVideoFrame;
 
     Action<byte[]> takePhotoCompletion;
+    Action<byte[]> takeVideoCompletion;
 
     public CameraFeedPlatformView(CameraFeedView cameraFeedView)
     {
@@ -31,6 +34,8 @@ public class CameraFeedPlatformView :
         cameraFeedView.SwitchCameraPosition = this.SwitchCameraPosition;
         cameraFeedView.GetImage = this.GetImage;
         cameraFeedView.GetLatestVideoFrame = this.GetLatestVideoFrame;
+        cameraFeedView.StartRecording = this.StartRecording;
+        cameraFeedView.EndRecording = this.EndRecording;
 
         AutoresizingMask = UIViewAutoresizing.FlexibleHeight | UIViewAutoresizing.FlexibleWidth;
 
@@ -75,6 +80,9 @@ public class CameraFeedPlatformView :
         vidOutput.SetSampleBufferDelegate(this, DispatchQueue.DefaultGlobalQueue);
         session.AddOutput(vidOutput);
 
+        AVCaptureMovieFileOutput vidRecordOutput = new();
+        session.AddOutput(vidRecordOutput);
+
         AVCaptureVideoPreviewLayer layer = new(session);
         layer.VideoGravity = AVLayerVideoGravity.ResizeAspectFill;
         layer.Frame = Layer.Frame;
@@ -85,6 +93,7 @@ public class CameraFeedPlatformView :
         videoInput = input;
         videoOutput = vidOutput;
         imageOutput = imgOutput;
+        videoRecordOutput = vidRecordOutput;
 
         Layer.AddSublayer(layer);
     }
@@ -232,6 +241,61 @@ public class CameraFeedPlatformView :
 
         latestVideoFrame = data.ToArray();
     }
+
+    private void StartRecording()
+    {
+        if (videoRecordOutput.Recording)
+            return;
+
+        var urls = NSFileManager.DefaultManager.GetUrls(
+            NSSearchPathDirectory.DocumentDirectory,
+            NSSearchPathDomain.User);
+
+        var url = urls.First()?.Append("video.mp4", false);
+
+        if (url == null)
+            return;
+
+        NSError error;
+        if (NSFileManager.DefaultManager.FileExists(url.Path))
+            NSFileManager.DefaultManager.Remove(url.Path, out error); // clean up previous recording
+
+        videoRecordOutput.StartRecordingToOutputFile(url, this);   
+    }
+
+    private void EndRecording(Action<byte[]> completion)
+    {
+        this.takeVideoCompletion = completion;
+        videoRecordOutput.StopRecording();
+    }
+
+    public void FinishedRecording(
+        AVCaptureFileOutput captureOutput,
+        NSUrl outputFileUrl,
+        NSObject[] connections,
+        NSError error)
+    {
+        if (error != null)
+        {
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine($"FinishRecording error >>> {error.LocalizedDescription}");
+#endif
+            takeVideoCompletion?.Invoke(new byte[] { });
+            return;
+        }
+
+        var data = NSData.FromUrl(outputFileUrl);
+        if (data == null)
+        {
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine($"FinishRecording error >>> data at url was empty/null");
+#endif
+            takeVideoCompletion?.Invoke(new byte[] { });
+            return;
+        }
+
+        takeVideoCompletion?.Invoke(data.ToArray());
+    }
     #endregion
 
     protected override void Dispose(bool disposing)
@@ -242,6 +306,7 @@ public class CameraFeedPlatformView :
         captureDevice = null;
         imageOutput = null;
         videoOutput = null;
+        videoRecordOutput = null;
 
         base.Dispose(disposing);
     }

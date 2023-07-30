@@ -26,6 +26,8 @@ public class CameraFeedView : View
     public Action<CameraPosition> SwitchCameraPosition;
     public Action<Action<byte[]>> GetImage;
     public Action<Action<byte[]>> GetLatestVideoFrame;
+    public Action StartRecording;
+    public Action<Action<byte[]>> EndRecording;
 }
 
 public enum CameraPosition
