@@ -1,5 +1,6 @@
 using CommunityToolkit.Maui.Markup;
 using IOSAndroidCameraFeed.Controls;
+using System.Diagnostics;
 using static CommunityToolkit.Maui.Markup.GridRowsColumns;
 
 namespace IOSAndroidCameraFeed.Pages;
@@ -29,6 +30,7 @@ public class MainPage : ContentPage
 		cameraFeed.CameraPosition = CameraPosition.Rear;
 
 		switchCameraPosition.TapGesture(SwitchCameraPosition, 1);
+		takePhoto.TapGesture(GetImage, 1);
 
 		Content = new Grid 
 		{
@@ -51,6 +53,8 @@ public class MainPage : ContentPage
 					.Column(4)
 			}
 		};
+
+		FetchFrameEveryTenSecond();
 	}
 
     private void SwitchCameraPosition()
@@ -63,5 +67,28 @@ public class MainPage : ContentPage
 		{
 			cameraFeed.CameraPosition = CameraPosition.Rear;
 		}
+	}
+
+	private void GetImage()
+	{
+		cameraFeed.GetImage((byteArray) =>
+		{
+            Debug.WriteLine($"Current Image as BASE64 >>> {Convert.ToBase64String(byteArray)}");
+        });
+	}
+
+	private void FetchFrameEveryTenSecond()
+	{
+		Task.Run(async () =>
+		{
+			while(true)
+			{
+				await Task.Delay(10000);
+                cameraFeed.GetLatestVideoFrame((byteArray) =>
+                {
+                    Debug.WriteLine($"Current VIDEO FRAME as BASE64 >>> {Convert.ToBase64String(byteArray)}");
+                });
+            }
+		});
 	}
 }
