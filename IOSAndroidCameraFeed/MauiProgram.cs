@@ -1,4 +1,7 @@
-﻿using IOSAndroidCameraFeed.Controls;
+﻿using CommunityToolkit.Maui;
+using CommunityToolkit.Maui.Core;
+using CommunityToolkit.Maui.Markup;
+using IOSAndroidCameraFeed.Controls;
 using IOSAndroidCameraFeed.Handlers;
 using IOSAndroidCameraFeed.Pages;
 using Microsoft.Extensions.Logging;
@@ -12,6 +15,9 @@ public static class MauiProgram
 		var builder = MauiApp.CreateBuilder();
 		builder
 			.UseMauiApp<App>()
+			.UseMauiCommunityToolkit()
+			.UseMauiCommunityToolkitCore()
+			.UseMauiCommunityToolkitMarkup()
 			.ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

@@ -28,9 +28,6 @@ public class MainPage : ContentPage
 		cameraFeed = new CameraFeedView();
 		cameraFeed.CameraPosition = CameraPosition.Rear;
 
-		cameraFeed.HeightRequest = HeightRequest;
-		cameraFeed.WidthRequest = WidthRequest;
-
 		switchCameraPosition.TapGesture(SwitchCameraPosition, 1);
 
 		Content = new Grid 

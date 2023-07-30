@@ -1,4 +1,5 @@
 ﻿using AVFoundation;
+using CommunityToolkit.Maui.Alerts;
 using Foundation;
 using IOSAndroidCameraFeed.Controls;
 using UIKit;
@@ -17,69 +18,72 @@ public class CameraFeedPlatformView : UIView
         cameraFeedView.StartFeed = this.Start;
         cameraFeedView.SwitchCameraPosition = this.SwitchCameraPosition;
 
-        AVCaptureDevicePosition position = AVCaptureDevicePosition.Front;
-        if (cameraFeedView.CameraPosition == CameraPosition.Rear)
-            position = AVCaptureDevicePosition.Back;
+        AutoresizingMask = UIViewAutoresizing.FlexibleHeight | UIViewAutoresizing.FlexibleWidth;
 
         AVCaptureDevice.RequestAccessForMediaType(AVAuthorizationMediaType.Video, (granted) =>
         {
             if (!granted)
                 return;
 
-            SetupCaptureDevice(position);
-            SetupCaptureSession();
+            Setup(cameraFeedView.CameraPosition);
         });
     }
 
-    private void SetupCaptureDevice(AVCaptureDevicePosition position)
+    #region Setup
+    private void Setup(CameraPosition position)
     {
-        captureDevice = AVCaptureDevice.GetDefaultDevice(
-            AVCaptureDeviceType.BuiltInDualCamera,
-            AVMediaTypes.Video,
-            position);
+        AVCaptureDevice device = GetCameraForPosition(position);
 
-        if (captureDevice == null && OperatingSystem.IsIOSVersionAtLeast(13))
-            captureDevice = AVCaptureDevice.GetDefaultDevice(
-                AVCaptureDeviceType.BuiltInDualWideCamera,
-                AVMediaTypes.Video,
-                position);
-    }
-
-    private void SetupCaptureSession()
-    {
-        NSError error = null;
-        videoInput = new AVCaptureDeviceInput(captureDevice, out error);
-
-        captureSession = new AVCaptureSession();
-        captureSession.SessionPreset = AVCaptureSession.Preset1280x720;
-        captureSession.AddInput(videoInput);
-
-        videoPreviewLayer = new AVCaptureVideoPreviewLayer(captureSession);
-        videoPreviewLayer.VideoGravity = AVLayerVideoGravity.ResizeAspectFill;
-
-        videoPreviewLayer.Frame = Layer.Frame;
-        Layer.AddSublayer(videoPreviewLayer);
-    }
-
-    private void Start()
-    {
-        if (captureSession != null && !captureSession.Running)
+        if (device == null)
         {
-            captureSession.StartRunning();
-        }        
+            Toast.Make("Feed Failure").Show();
+            return;
+        }
+
+        NSError error = null;
+        AVCaptureDeviceInput input = new(device, out error);
+
+        if (error != null)
+        {
+            Toast.Make($"Feed Failure {error.LocalizedDescription}").Show();
+            return;
+        }
+
+        AVCaptureSession session = new();
+        session.SessionPreset = AVCaptureSession.Preset1280x720;
+        session.AddInput(input);
+
+        AVCaptureVideoPreviewLayer layer = new(session);
+        layer.VideoGravity = AVLayerVideoGravity.ResizeAspectFill;
+        layer.Frame = Layer.Frame;
+
+        captureDevice = device;
+        captureSession = session;
+        videoPreviewLayer = layer;
+        videoInput = input;
+
+        Layer.AddSublayer(layer);
     }
 
-    private void SwitchCameraPosition(CameraPosition newPosition)
+    private AVCaptureDevice GetCameraForPosition(CameraPosition position)
     {
-        AVCaptureDevicePosition position = AVCaptureDevicePosition.Front;
-        if (newPosition == CameraPosition.Rear)
-            position = AVCaptureDevicePosition.Back;
+        var desiredPosition = position == CameraPosition.Front ?
+            AVCaptureDevicePosition.Front :
+            AVCaptureDevicePosition.Back;
 
-        captureSession.StopRunning();
-        videoPreviewLayer.RemoveFromSuperLayer();
+        AVCaptureDeviceDiscoverySession discoverySession =
+                    AVCaptureDeviceDiscoverySession.Create(
+                        new AVCaptureDeviceType[] { AVCaptureDeviceType.BuiltInWideAngleCamera },
+                        AVMediaTypes.Video,
+                        AVCaptureDevicePosition.Unspecified);
 
-        SetupCaptureDevice(position);
-        SetupCaptureSession();
+        foreach (var device in discoverySession.Devices)
+        {
+            if (device.Position == desiredPosition)
+                return device;
+        }
+
+        return null;
     }
 
     public override void LayoutSubviews()
@@ -89,5 +93,52 @@ public class CameraFeedPlatformView : UIView
             base.LayoutSubviews();
             Start();
         });
+    }
+    #endregion
+
+    #region API 
+    private void Start()
+    {
+        if (captureSession != null && !captureSession.Running)
+        {
+            videoPreviewLayer.Frame = Layer.Frame;
+            captureSession.StartRunning();
+        }        
+    }
+
+    private void SwitchCameraPosition(CameraPosition newPosition)
+    {
+        AVCaptureDevice device = GetCameraForPosition(newPosition);
+
+        if (captureSession == null || videoInput == null || device == null)
+            return;
+
+        captureSession.BeginConfiguration();
+        captureSession.RemoveInput(videoInput);
+
+        NSError error = null;
+        AVCaptureDeviceInput input = new(device, out error);
+
+        if (error != null)
+        {
+            Toast.Make($"Feed Failure {error.LocalizedDescription}").Show();
+            return;
+        }
+
+        videoInput = input;
+
+        captureSession.AddInput(videoInput);
+        captureSession.CommitConfiguration();
+    }
+    #endregion
+
+    protected override void Dispose(bool disposing)
+    {
+        captureSession = null;
+        videoInput = null;
+        videoPreviewLayer = null;
+        captureDevice = null;
+
+        base.Dispose(disposing);
     }
 }
