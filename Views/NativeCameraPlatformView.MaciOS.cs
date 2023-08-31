@@ -1,15 +1,13 @@
 ﻿using AVFoundation;
-using CommunityToolkit.Maui.Alerts;
-using Foundation;
-using IOSAndroidCameraFeed.Controls;
-using UIKit;
 using CoreFoundation;
-using CoreMedia;
 using CoreImage;
+using CoreMedia;
+using Foundation;
+using UIKit;
 
-namespace IOSAndroidCameraFeed.Platforms.iOS.Controls;
+namespace Maui.NativeCamera.Views;
 
-public class CameraFeedPlatformView :
+public class NativeCameraPlatformView :
     UIView,
     IAVCapturePhotoCaptureDelegate,
     IAVCaptureVideoDataOutputSampleBufferDelegate,
@@ -28,14 +26,13 @@ public class CameraFeedPlatformView :
     Action<byte[]> takePhotoCompletion;
     Action<byte[]> takeVideoCompletion;
 
-    public CameraFeedPlatformView(CameraFeedView cameraFeedView)
+    public NativeCameraPlatformView(NativeCameraView cameraFeedView)
     {
-        cameraFeedView.StartFeed = this.Start;
         cameraFeedView.SwitchCameraPosition = this.SwitchCameraPosition;
-        cameraFeedView.GetImage = this.GetImage;
-        cameraFeedView.GetLatestVideoFrame = this.GetLatestVideoFrame;
-        cameraFeedView.StartRecording = this.StartRecording;
-        cameraFeedView.EndRecording = this.EndRecording;
+        cameraFeedView.TakePhoto = this.GetImage;
+        cameraFeedView.GetCameraFeedFrame = this.GetLatestVideoFrame;
+        cameraFeedView.StartVideoRecording = this.StartRecording;
+        cameraFeedView.EndVideoRecording = this.EndRecording;
 
         AutoresizingMask = UIViewAutoresizing.FlexibleHeight | UIViewAutoresizing.FlexibleWidth;
 
@@ -55,7 +52,6 @@ public class CameraFeedPlatformView :
 
         if (device == null)
         {
-            Toast.Make("Feed Failure").Show();
             return;
         }
 
@@ -64,7 +60,6 @@ public class CameraFeedPlatformView :
 
         if (error != null)
         {
-            Toast.Make($"Feed Failure {error.LocalizedDescription}").Show();
             return;
         }
 
@@ -100,7 +95,7 @@ public class CameraFeedPlatformView :
 
     private AVCaptureDevice GetCameraForPosition(CameraPosition position)
     {
-        var desiredPosition = position == CameraPosition.Front ?
+        var desiredPosition = position == CameraPosition.FrontFacing ?
             AVCaptureDevicePosition.Front :
             AVCaptureDevicePosition.Back;
 
@@ -136,7 +131,7 @@ public class CameraFeedPlatformView :
         {
             videoPreviewLayer.Frame = Layer.Frame;
             captureSession.StartRunning();
-        }        
+        }
     }
 
     private void SwitchCameraPosition(CameraPosition newPosition)
@@ -154,7 +149,6 @@ public class CameraFeedPlatformView :
 
         if (error != null)
         {
-            Toast.Make($"Feed Failure {error.LocalizedDescription}").Show();
             return;
         }
 
@@ -192,16 +186,10 @@ public class CameraFeedPlatformView :
         if (error != null)
         {
             takePhotoCompletion?.Invoke(new byte[] { });
-#if DEBUG
-            System.Diagnostics.Debug.WriteLine($"DidFinishProcessingPhoto error >>> {error.LocalizedDescription}");
-#endif
             return;
         }
 
         NSData data = photo.FileDataRepresentation;
-        if (data == null)
-            System.Diagnostics.Debug.WriteLine($"DidFinishProcessingPhoto error >>> data was null for photo");
-
         takePhotoCompletion?.Invoke(data.ToArray());
     }
 
@@ -260,7 +248,7 @@ public class CameraFeedPlatformView :
         if (NSFileManager.DefaultManager.FileExists(url.Path))
             NSFileManager.DefaultManager.Remove(url.Path, out error); // clean up previous recording
 
-        videoRecordOutput.StartRecordingToOutputFile(url, this);   
+        videoRecordOutput.StartRecordingToOutputFile(url, this);
     }
 
     private void EndRecording(Action<byte[]> completion)
@@ -277,9 +265,6 @@ public class CameraFeedPlatformView :
     {
         if (error != null)
         {
-#if DEBUG
-            System.Diagnostics.Debug.WriteLine($"FinishRecording error >>> {error.LocalizedDescription}");
-#endif
             takeVideoCompletion?.Invoke(new byte[] { });
             return;
         }
@@ -287,9 +272,6 @@ public class CameraFeedPlatformView :
         var data = NSData.FromUrl(outputFileUrl);
         if (data == null)
         {
-#if DEBUG
-            System.Diagnostics.Debug.WriteLine($"FinishRecording error >>> data at url was empty/null");
-#endif
             takeVideoCompletion?.Invoke(new byte[] { });
             return;
         }
@@ -311,3 +293,4 @@ public class CameraFeedPlatformView :
         base.Dispose(disposing);
     }
 }
+

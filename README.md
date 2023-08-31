@@ -1,4 +1,4 @@
-# IOSAndroidCameraFeed
+# Maui.NativeCamera
 
 Project that creates a view in native code for iOS and Android in order to support a live camera feed in .NET MAUI. 
 The platform views are wrapped using the .NET MAUI handler concepts found [here](https://learn.microsoft.com/en-us/dotnet/maui/user-interface/handlers/create).
