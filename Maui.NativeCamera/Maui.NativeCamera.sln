@@ -5,7 +5,7 @@ VisualStudioVersion = 25.0.1706.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maui.NativeCamera", "Maui.NativeCamera.csproj", "{918C6850-B7F2-4EC0-B125-54B2BADCFEFF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NativeCameraTester", "tester\NativeCameraTester.csproj", "{69845F24-D0D7-4EAA-9E41-859E62D3D86D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NativeCameraTester", "..\NativeCameraTester\NativeCameraTester.csproj", "{377D9869-25C5-45A7-84D5-560B2FC8094C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{918C6850-B7F2-4EC0-B125-54B2BADCFEFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{918C6850-B7F2-4EC0-B125-54B2BADCFEFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{918C6850-B7F2-4EC0-B125-54B2BADCFEFF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{69845F24-D0D7-4EAA-9E41-859E62D3D86D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{69845F24-D0D7-4EAA-9E41-859E62D3D86D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{69845F24-D0D7-4EAA-9E41-859E62D3D86D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{69845F24-D0D7-4EAA-9E41-859E62D3D86D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{377D9869-25C5-45A7-84D5-560B2FC8094C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{377D9869-25C5-45A7-84D5-560B2FC8094C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{377D9869-25C5-45A7-84D5-560B2FC8094C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{377D9869-25C5-45A7-84D5-560B2FC8094C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

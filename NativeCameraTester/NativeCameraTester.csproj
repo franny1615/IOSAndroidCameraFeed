@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net7.0-android;net7.0-ios</TargetFrameworks>
+		<TargetFrameworks>net7.0-android;net7.0-ios;</TargetFrameworks>
 
 		<OutputType>Exe</OutputType>
 		<RootNamespace>NativeCameraTester</RootNamespace>
@@ -14,7 +14,7 @@
 
 		<!-- App Identifier -->
 		<ApplicationId>com.companyname.nativecameratester</ApplicationId>
-		<ApplicationIdGuid>d7151eed-4d01-496d-bc1c-3311e25ea02f</ApplicationIdGuid>
+		<ApplicationIdGuid>f6968992-b72a-4214-8332-1db846f5a769</ApplicationIdGuid>
 
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
@@ -35,6 +35,10 @@
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
 
 		<!-- Images -->
+		<MauiImage Include="Resources\Images\*" />
+		<MauiImage Update="Resources\Images\dotnet_bot.svg" BaseSize="168,208" />
+
+		<!-- Custom Fonts -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
@@ -47,10 +51,8 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <None Remove="Resources\Fonts\" />
-	  <None Remove="Resources\Images\" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Folder Include="Resources\Fonts\" />
-	  <Folder Include="Resources\Images\" />
 	</ItemGroup>
 </Project>

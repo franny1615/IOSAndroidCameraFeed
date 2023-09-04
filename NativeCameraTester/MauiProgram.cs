@@ -1,5 +1,5 @@
-﻿using Maui.NativeCamera;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+using Maui.NativeCamera;
 
 namespace NativeCameraTester;
 
@@ -9,8 +9,8 @@ public static class MauiProgram
 	{
 		var builder = MauiApp.CreateBuilder();
 		builder
-			.UseMauiNativeCamera()
-			.UseMauiApp<App>();
+			.UseMauiApp<App>()
+			.UseMauiNativeCamera();
 
 #if DEBUG
 		builder.Logging.AddDebug();
