@@ -8,10 +8,12 @@ using Android.Hardware.Camera2.Params;
 using Android.Media;
 using Android.OS;
 using Android.Runtime;
+using Android.Util;
 using Android.Views;
 using Android.Widget;
 using AndroidX.Core.App;
 using AndroidX.Core.Content;
+using Java.Nio;
 using Size = Android.Util.Size;
 
 namespace Maui.NativeCamera.Views;
@@ -49,7 +51,9 @@ public class NativeCameraPlatformView :
     private string cameraId = "";
     private Context _context;
 
-    private bool _havePermissions = false; 
+    private bool _havePermissions = false;
+
+    public Action<byte[]> _takePhoto; 
 
 	public NativeCameraPlatformView(
         Context context,
@@ -114,22 +118,27 @@ public class NativeCameraPlatformView :
 
     private void TakePhoto(Action<byte[]> completion)
     {
-
+        // TODO: figure out how to save as a PNG instead
+        // and why its not saving to file system correctly
+        _takePhoto = completion;
+        _captureRequestBuilder = _cameraDevice.CreateCaptureRequest(CameraTemplate.StillCapture);
+        _captureRequestBuilder.AddTarget(_imageReader.Surface);
+        _cameraCaptureSession.Capture(_captureRequestBuilder.Build(), new CaptureCallback(), null);
     }
 
     private void GetCameraFeedFrame(Action<byte[]> completion)
     {
-
+        // TODO:
     }
 
     private void StartVideoRecording()
     {
-
+        // TODO:
     }
 
     private void EndVideoRecording(Action<byte[]> completion)
     {
-
+        // TODO: 
     }
     #endregion
 
@@ -137,14 +146,34 @@ public class NativeCameraPlatformView :
     private async void CheckPermissions(Action<bool> completion)
     {
         PermissionStatus cameraStatus = await Permissions.RequestAsync<Permissions.Camera>();
-        if (cameraStatus == PermissionStatus.Granted)
+
+        if (!OperatingSystem.IsAndroidVersionAtLeast(32)) // meaning API < 32
         {
-            completion(true);
+            PermissionStatus readPermission = await Permissions.RequestAsync<Permissions.StorageRead>();
+            PermissionStatus writePermission = await Permissions.RequestAsync<Permissions.StorageWrite>();
+
+            if (cameraStatus == PermissionStatus.Granted &&
+                readPermission == PermissionStatus.Granted &&
+                writePermission == PermissionStatus.Granted)
+            {
+                completion(true);
+            }
+            else
+            {
+                completion(false);
+            }
         }
         else
         {
-            completion(false);
-        }
+            if (cameraStatus == PermissionStatus.Granted)
+            {
+                completion(true);
+            }
+            else
+            {
+                completion(false);
+            }
+        }   
     }
 
     private void SetupCamera()
@@ -280,7 +309,13 @@ public class NativeCameraPlatformView :
     #region IOnImageListener
     public void OnImageAvailable(ImageReader reader)
     {
-        // TODO:
+        var image = reader.AcquireLatestImage();
+        ByteBuffer buffer = image.GetPlanes()[0].Buffer;
+        byte[] bytes = new byte[buffer.Capacity()];
+        buffer.Get(bytes);
+        image.Close();
+
+        _takePhoto?.Invoke(bytes);
     }
     #endregion
 }
@@ -339,4 +374,9 @@ public class CaptureStateCallback : CameraCaptureSession.StateCallback
     {
         ConfigureFailed?.Invoke(session);
     }
+}
+
+public class CaptureCallback : CameraCaptureSession.CaptureCallback
+{
+
 }

@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Maui.Markup;
+using CommunityToolkit.Maui.Storage;
 using Maui.NativeCamera;
 using static CommunityToolkit.Maui.Markup.GridRowsColumns;
 
@@ -55,7 +56,16 @@ public class MainPage : ContentPage
 
     private void _takePhoto_Clicked(object sender, EventArgs e)
     {
-        throw new NotImplementedException();
+        _cameraView.TakePhoto((photoBytes) =>
+        {
+            using (var stream = new MemoryStream(photoBytes))
+            {
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    await FileSaver.Default.SaveAsync("temp.jpeg", stream, CancellationToken.None);
+                });
+            }
+        });
     }
 
     private void _switchCameraPosition_Clicked(object sender, EventArgs e)
