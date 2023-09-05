@@ -38,7 +38,6 @@ public class MainPage : ContentPage
             ColumnDefinitions = Columns.Define(Star, Star, Star),
             RowSpacing = 8,
             ColumnSpacing = 8,
-            Padding = 8,
             Children =
             {
                 _cameraView.Row(0).ColumnSpan(3),
@@ -64,10 +63,12 @@ public class MainPage : ContentPage
         if (_switchCameraPosition.Text == "Rear")
         {
             _cameraView.SwitchCameraPosition(CameraPosition.RearFacing);
+            _switchCameraPosition.Text = "Front";
         }
         else if (_switchCameraPosition.Text == "Front")
         {
             _cameraView.SwitchCameraPosition(CameraPosition.FrontFacing);
+            _switchCameraPosition.Text = "Rear";
         }
     }
 }

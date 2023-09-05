@@ -16,6 +16,7 @@ using Size = Android.Util.Size;
 
 namespace Maui.NativeCamera.Views;
 
+// credit: https://github.com/TomerPacific/MediumArticles/blob/master/Camrea2API/app/src/main/java/com/tomerpacific/camera2api/MainActivity.kt
 public class NativeCameraPlatformView :
     RelativeLayout,
     TextureView.ISurfaceTextureListener,
@@ -66,6 +67,8 @@ public class NativeCameraPlatformView :
             LayoutParams.MatchParent,
             LayoutParams.MatchParent);
 
+        _cameraManager = (CameraManager)Platform.CurrentActivity.GetSystemService(Context.CameraService);
+
         SetupTextureView();
         StartBackgroundThread();
 
@@ -103,7 +106,10 @@ public class NativeCameraPlatformView :
     #region API
     private void SwitchCamera(CameraPosition cameraPosition)
     {
-
+        _cameraDevice.Close();
+        _currentPosition = cameraPosition;
+        SetupCamera();
+        ConnectCamera();
     }
 
     private void TakePhoto(Action<byte[]> completion)
@@ -143,8 +149,6 @@ public class NativeCameraPlatformView :
 
     private void SetupCamera()
     {
-        _cameraManager = (CameraManager) Platform.CurrentActivity.GetSystemService(Context.CameraService);
-
         var cameraIds = _cameraManager.GetCameraIdList();
         var desiredCameraId = "";
 
