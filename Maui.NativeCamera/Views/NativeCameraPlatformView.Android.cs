@@ -48,6 +48,8 @@ public class NativeCameraPlatformView :
     private string cameraId = "";
     private Context _context;
 
+    private bool _havePermissions = false; 
+
 	public NativeCameraPlatformView(
         Context context,
         NativeCameraView nativeCameraView) : base(context)
@@ -65,13 +67,13 @@ public class NativeCameraPlatformView :
             LayoutParams.MatchParent);
 
         SetupTextureView();
-        SetupCameraCallbacks();
         StartBackgroundThread();
 
         CheckPermissions((granted) =>
         {
             if (granted)
             {
+                _havePermissions = granted;
                 this.OnSurfaceTextureAvailable(
                     _textureView.SurfaceTexture,
                     _textureView.Width,
@@ -196,6 +198,7 @@ public class NativeCameraPlatformView :
         _textureView.LayoutParameters = new LayoutParams(
             LayoutParams.MatchParent,
             LayoutParams.MatchParent);
+        _textureView.SurfaceTextureListener = this;
         AddView(_textureView);
     }
 
@@ -251,6 +254,12 @@ public class NativeCameraPlatformView :
     #region Surface Texture Listener
     public void OnSurfaceTextureAvailable(SurfaceTexture surface, int width, int height)
     {
+        if (surface == null || !_havePermissions)
+        {
+            return;
+        }
+
+        SetupCameraCallbacks();
         SetupCamera();
         ConnectCamera();
     }
