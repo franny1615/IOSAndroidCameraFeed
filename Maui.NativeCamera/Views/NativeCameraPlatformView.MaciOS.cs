@@ -49,14 +49,16 @@ public class NativeCameraPlatformView :
     private void Setup(CameraPosition position)
     {
         AVCaptureDevice device = GetCameraForPosition(position);
+        AVCaptureDevice audioDevice = GetAudioDeviceForPosition(position);
 
-        if (device == null)
+        if (device == null || audioDevice == null)
         {
             return;
         }
 
         NSError error = null;
         AVCaptureDeviceInput input = new(device, out error);
+        AVCaptureDeviceInput audioInput = new(audioDevice, out error);
 
         if (error != null)
         {
@@ -66,6 +68,7 @@ public class NativeCameraPlatformView :
         AVCaptureSession session = new();
         session.SessionPreset = AVCaptureSession.Preset1280x720;
         session.AddInput(input);
+        session.AddInput(audioInput);
 
         AVCapturePhotoOutput imgOutput = new();
         session.AddOutput(imgOutput);
@@ -112,6 +115,21 @@ public class NativeCameraPlatformView :
         }
 
         return null;
+    }
+
+    private AVCaptureDevice GetAudioDeviceForPosition(CameraPosition position)
+    {
+        var desiredPosition = position == CameraPosition.FrontFacing ?
+            AVCaptureDevicePosition.Front :
+            AVCaptureDevicePosition.Back;
+
+        AVCaptureDeviceDiscoverySession discoverySession =
+                    AVCaptureDeviceDiscoverySession.Create(
+                        new AVCaptureDeviceType[] { AVCaptureDeviceType.BuiltInMicrophone },
+                        AVMediaTypes.Audio,
+                        AVCaptureDevicePosition.Unspecified);
+
+        return discoverySession.Devices.FirstOrDefault();
     }
 
     public override void LayoutSubviews()

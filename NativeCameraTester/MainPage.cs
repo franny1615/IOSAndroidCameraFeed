@@ -51,7 +51,26 @@ public class MainPage : ContentPage
 
     private void _takeVideo_Clicked(object sender, EventArgs e)
     {
-        throw new NotImplementedException();
+        if (_takeVideo.Text == "Record")
+        {
+            _cameraView.StartVideoRecording();
+            _takeVideo.Text = "Stop Record";
+        }
+        else if (_takeVideo.Text == "Stop Record")
+        {
+            _takeVideo.Text = "Record";
+            _cameraView.EndVideoRecording((videoData) =>
+            {
+                using (var stream = new MemoryStream(videoData))
+                {
+                    MainThread.BeginInvokeOnMainThread(async () =>
+                    {
+                        await FileSaver.Default.SaveAsync("temp.mov", stream, CancellationToken.None);
+                    });
+                }
+            });
+        }
+
     }
 
     private void _takePhoto_Clicked(object sender, EventArgs e)
